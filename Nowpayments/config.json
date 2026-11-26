@@ -1,0 +1,25 @@
+{
+    "name": "NOWPayments",
+    "code": "nowpayments",
+    "version": "1.0.0",
+    "description": "NOWPayments crypto payment gateway (hosted invoice + IPN callback)",
+    "author": "custom",
+    "type": "payment",
+    "require": {
+        "xboard": ">=1.0.0"
+    },
+    "config": {
+        "display_name": {
+            "type": "string",
+            "default": "NOWPayments (Crypto)",
+            "label": "Display Name",
+            "description": "Name shown to users at checkout"
+        },
+        "icon": {
+            "type": "string",
+            "default": "🪙",
+            "label": "Icon",
+            "description": "Icon shown next to the payment method"
+        }
+    }
+}
