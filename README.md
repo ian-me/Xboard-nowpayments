@@ -1,55 +1,52 @@
 # XBoard NOWPayments
 
-XBoard에서 NOWPayments의 호스티드 인보이스를 이용해 암호화폐 결제를 받을 수 있는 결제 플러그인입니다. 결제 알림(IPN)은 HMAC-SHA512 서명을 확인한 뒤 처리합니다.
+A payment plugin for accepting cryptocurrency payments through NOWPayments hosted invoices. Incoming payment notifications (IPNs) are processed only after HMAC-SHA512 signature verification.
 
-- 플러그인 버전: `1.0.0`
-- XBoard 요구 버전: `>=1.0.0`
-- 플러그인 파일: [`Nowpayments/`](Nowpayments/)
-- 상세 설치·운영 안내: [`Nowpayments/README.md`](Nowpayments/README.md)
-- 릴리스 ZIP: [최신 버전 다운로드](https://github.com/ian-me/Xboard-nowpayments/releases/latest/download/Nowpayments-v1.0.0.zip)
+- Plugin version: `1.0.0`
+- Plugin files: [`Nowpayments/`](Nowpayments/)
+- Installation and configuration guide: [`Nowpayments/README.md`](Nowpayments/README.md)
+- Release ZIP: [Download the latest version](https://github.com/ian-me/Xboard-nowpayments/releases/latest/download/Nowpayments-v1.0.0.zip)
 
-## 기능
+## Features
 
-- NOWPayments 호스티드 결제 인보이스 생성 및 결제 페이지로 이동
-- `x-nowpayments-sig` 헤더의 HMAC-SHA512 서명 검증
-- 기본적으로 `finished` 상태만 결제 완료 처리
-- 선택 설정으로 `confirmed` 상태도 완료 처리 가능
-- 샌드박스 API, 고정 결제 코인, 환율 및 수수료 부담 설정 지원
+- Creates hosted NOWPayments payment invoices and redirects customers to the payment page
+- Verifies the HMAC-SHA512 signature in the `x-nowpayments-sig` header
+- Marks an order as paid only when its status is `finished` by default
+- Optionally accepts the `confirmed` status as a completed payment
+- Supports the sandbox API, fixed payment currencies, exchange rates, and customer-paid fees
 
-## 설치
+## Installation
 
-1. 저장소를 내려받거나 릴리스 ZIP을 풀고, `Nowpayments` 폴더 전체를 XBoard의 `plugins/` 폴더에 복사합니다. 설치 후 경로는 다음과 같아야 합니다.
-
+1. Download the repository or extract the release ZIP, then copy the entire `Nowpayments` directory into the `plugins/` directory of your XBoard installation. The resulting paths should be:
    ```text
    plugins/Nowpayments/Plugin.php
    plugins/Nowpayments/config.json
    ```
+2. In the XBoard admin panel, open **Plugins**, then install and enable **NOWPayments**.
+3. Open **Payment Settings → Add → Payment Method**, select **NOWPayments**, and enter your settings.
+4. In Docker environments, you may need to restart the container or run `php artisan octane:reload` for changes to take effect.
 
-2. XBoard 관리자 화면의 **플러그인** 메뉴에서 **NOWPayments**를 설치하고 활성화합니다.
-3. **결제 설정 → 추가 → 결제 방식**에서 **NOWPayments**를 선택하고 설정을 입력합니다.
-4. Docker 환경에서는 변경 사항 반영을 위해 컨테이너 재시작 또는 `php artisan octane:reload`가 필요할 수 있습니다.
+## Configuration
 
-## 설정
-
-| 항목 | 설명 |
+| Setting | Description |
 |---|---|
-| API Key | NOWPayments 대시보드의 **Store Settings → API keys**에서 발급합니다. 필수 항목입니다. |
-| IPN Secret | **Store Settings → Instant payment notifications**에서 발급합니다. 필수 항목입니다. |
-| Price Currency | 인보이스 금액 기준 통화 코드입니다. 기본값은 `usd`입니다. |
-| Exchange Rate | 사이트 통화 기준으로 1단위의 Price Currency가 얼마인지 입력합니다. 기본값은 `1`입니다. 예: 사이트 통화가 CNY이고 기준 통화가 USD이면 `7.2`. |
-| Fixed Pay Currency | 결제 코인을 고정하려면 `usdttrc20`처럼 입력합니다. 비워 두면 결제자가 선택합니다. |
-| Fee Paid By User | `1`이면 결제자가 수수료를 부담합니다. 기본값은 `0`입니다. |
-| Accept "confirmed" | `1`이면 `confirmed`도 결제 완료로 처리합니다. 기본적으로는 `finished`만 허용합니다. |
-| Sandbox Mode | `1`이면 샌드박스 API를 사용합니다. 샌드박스용 키가 필요하며 기본값은 `0`입니다. |
+| API Key | Required. Create one in the NOWPayments dashboard under **Store Settings → API keys**. |
+| IPN Secret | Required. Create one under **Store Settings → Instant payment notifications**. |
+| Price Currency | Currency code used for the invoice amount. Defaults to `usd`. |
+| Exchange Rate | Amount of the Price Currency equal to one unit of your site's currency. Defaults to `1`. For example, enter `7.2` if your site currency is CNY and the Price Currency is USD. |
+| Fixed Pay Currency | Set a currency such as `usdttrc20` to require a specific payment currency. Leave blank to let the customer choose. |
+| Fee Paid By User | Set to `1` to have the customer pay the fee. Defaults to `0`. |
+| Accept "confirmed" | Set to `1` to also treat `confirmed` as completed. By default, only `finished` is accepted. |
+| Sandbox Mode | Set to `1` to use the sandbox API. A sandbox API key is required. Defaults to `0`. |
 
-결제 금액은 XBoard의 `total_amount`(센트 단위)를 `100 × Exchange Rate`로 나누어 산출합니다. IPN 알림 URL은 XBoard가 인보이스 생성 요청에 전달하므로 NOWPayments 대시보드에 별도로 등록하지 않아도 됩니다. 단, 알림 URL이 인터넷에서 패널로 연결 가능해야 합니다.
+The payment amount is calculated by dividing XBoard's `total_amount` (in cents) by `100 × Exchange Rate`. XBoard supplies the IPN notification URL when the invoice is created, so you do not need to register it separately in the NOWPayments dashboard. The notification URL must be reachable from the internet.
 
-## 결제 처리 및 주의 사항
+## Payment Handling and Notes
 
-결제자는 NOWPayments 호스티드 인보이스 페이지에서 결제합니다. XBoard는 콜백 서명을 확인하고, 허용된 결제 상태와 주문 번호 및 결제 ID가 유효할 때 주문을 완료 처리합니다. `waiting`, `confirming`, `partially_paid`, `failed`, `expired` 등은 자동 완료되지 않습니다. 부분 결제는 NOWPayments 대시보드에서 직접 확인하세요.
+Customers pay on the hosted NOWPayments invoice page. XBoard verifies the callback signature and completes an order only when the payment status is allowed and the order number and payment ID are valid. Statuses such as `waiting`, `confirming`, `partially_paid`, `failed`, and `expired` do not automatically complete an order. Check partial payments directly in the NOWPayments dashboard.
 
-운영 환경에서는 HTTPS를 사용하고 API Key와 IPN Secret을 공개하지 마세요. 실제 결제 전에 샌드박스 모드로 연동을 확인하는 것을 권장합니다.
+Use HTTPS in production and never expose your API Key or IPN Secret. We recommend testing the integration in sandbox mode before accepting live payments.
 
-## 라이선스 및 면책
+## License and Disclaimer
 
-MIT 라이선스로 배포됩니다. XBoard 또는 NOWPayments가 공식적으로 제공하거나 보증하는 플러그인이 아닙니다. 자세한 조건은 [`LICENSE`](LICENSE)를 확인하세요.
+Distributed under the MIT License. This plugin is not officially provided or endorsed by XBoard or NOWPayments. See [`LICENSE`](LICENSE) for the full license terms.
